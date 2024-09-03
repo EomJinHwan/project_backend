@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const {getUser, insertLoginHistory, insertUser, formatDate, check, encryptionPw} = require('./query.js');
+const {getUser, insertLoginHistory, insertUser, formatDate, check, encryptionPw, findUser} = require('./query.js');
 const requestIp = require('request-ip');
 const bcrypt = require('bcrypt');
 
@@ -110,19 +110,23 @@ app.post('/signUp', async (req, res) => {
     }
 });
 
-// 중복체크
-app.post('/singUp/checkId', (req, res) => {
-    const {user_id} = req.body;
-    check(user_id, (error, isDuplicate) => {
-        if (error) {
-            // 오류 처리
-            console.error("중복 체크 중 오류 발생:", error);
-            res.status(500).json({ message: '서버 오류' });
-        } else {
-            // 중복 여부 json 형식으로 클라로 전송
-            res.json({isDuplicate});
+//아이디 찾기
+app.post('/login', async (req, res) => {
+    try{
+        const {name, phone} = req.body;
+        //사용자 아이디 찾기
+        const userId = await findUser(name, phone);
+
+        if(userId){
+            //조건에 맞는 아이디 있으면 값 반환
+            return res.status(200).json({userId, message : "조건에 맞는 아이디가 있습니다"});
+        }else{
+            return res.status(400).json({message : "조건에 맞는 아이디가 없습니다"})
         }
-    });
+    }catch (error){
+        console.error("아이디 찾기 중 오류 발생:", error); // 서버 로그에 에러 기록
+        return res.status(500).json({ message: "서버 오류가 발생했습니다" });
+    }
 });
 
 app.listen(port, ()=> {

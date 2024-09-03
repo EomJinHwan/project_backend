@@ -98,6 +98,25 @@ async function encryptionPw(pw) {
     }
 };
 
+//아이디 찾기
+async function findUser(name, phone){
+    const query = "SELECT user_id FROM member WHERE name=? AND phone=?";
+    const values = [name, phone];
+    return new Promise((resolve, reject) => {
+        pool.query(query, values, (error, results) => {
+            if (error) {
+                console.error("오류", error);
+                return reject(error);
+            }
+            if (results.length > 0) {
+                resolve(results[0].user_id); // 아이디 찾기 성공
+            } else {
+                resolve(null); // 조건에 맞는 아이디 없음 
+            }
+        });
+    });
+};
+
 module.exports = {
     insertUser,
     insertLoginHistory,
@@ -105,4 +124,5 @@ module.exports = {
     formatDate,
     check,
     encryptionPw,
+    findUser,
 };
