@@ -27,9 +27,10 @@ async function insertLoginHistory(id, ip_address) {
         pool.query(query, values, (error, results) => {
             if (error) {
                 console.error("오류", error);
-                return;
+                return reject(error);
             }
             console.log("데이터 삽입 성공", results);
+                return resolve(results);
         });
     });
 };
@@ -74,9 +75,9 @@ async function check (id){
                 return reject(error);
             }
             if (results.length > 0) {
-                resolve(true); // 중복된 아이디가 있음 - 프론트 에 주는 값
+                resolve(false); // 중복된 아이디가 있음 - 프론트 에 주는 값
             } else {
-                resolve(false); // 중복된 아이디가 없음
+                resolve(true); // 중복된 아이디가 없음
             }
         });
     });
