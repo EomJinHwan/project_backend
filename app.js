@@ -61,12 +61,13 @@ app.get(`/signUp/:userId`, async (req, res) => {
         // 중복 체크
         const isDuplicate = await check(userId);
 
-        if (!isDuplicate) {
+        if (isDuplicate) {
             // 중복된 아이디가 있을 때
-            return res.status(400).json({ isDuplicate: false, message: "중복된 아이디입니다." });
+            return res.status(200).json(true);
+        } else{
+            // 중복되지 않은 경우
+            return res.status(200).json(false);
         }
-        // 중복되지 않은 경우
-        return res.status(200).json({ isDuplicate: true, message: "사용 가능한 아이디입니다." });
     } catch (error) {
         console.error("중복 체크 중 오류 발생:", error); // 서버 로그에 에러 기록
         res.status(500).json({ message: "서버 오류가 발생했습니다" });
@@ -79,12 +80,6 @@ app.post('/signUp', async (req, res) => {
     try {
         // 클라이언트로부터 받은 데이터에서 값을 추출
         const { user_id, user_pw, user_name, user_phone, user_birthDate } = req.body;
-
-        // 중복 체크 - 프론트 만들면 다시 봐야 함
-        const isDuplicate = await check(user_id);
-        if (isDuplicate) {
-            return res.status(400).json({ message: "중복된 아이디입니다." });
-        }
 
         // 필수 값이 모두 제공되었는지 확인
         if (!user_id || !user_pw || !user_name || !user_phone || !user_birthDate) {
@@ -107,7 +102,8 @@ app.post('/signUp', async (req, res) => {
 
         // 사용자 정보를 데이터베이스에 삽입
         await insertUser(user_id, encryption_pw, user_name, user_phone, birth);
-        return res.status(201).json({ message: '회원가입 성공' });
+        //return res.status(201).json({ message: '회원가입 성공' });
+        return res.status(201).json(false);
     } catch (error) {
         console.error("회원가입 실행중 오류 발생:", error); // 서버 로그에 에러 기록
         return res.status(500).json({ message: "서버 오류가 발생했습니다" });

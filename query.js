@@ -75,9 +75,9 @@ async function check (id){
                 return reject(error);
             }
             if (results.length > 0) {
-                resolve(false); // 중복된 아이디가 있음 - 프론트 에 주는 값
+                resolve(true); // 중복된 아이디가 있음 - 프론트 에 주는 값
             } else {
-                resolve(true); // 중복된 아이디가 없음
+                resolve(false); // 중복된 아이디가 없음
             }
         });
     });
