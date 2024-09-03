@@ -27,9 +27,10 @@ async function insertLoginHistory(id, ip_address) {
         pool.query(query, values, (error, results) => {
             if (error) {
                 console.error("오류", error);
-                return;
+                return reject(error);
             }
             console.log("데이터 삽입 성공", results);
+                return resolve(results);
         });
     });
 };
