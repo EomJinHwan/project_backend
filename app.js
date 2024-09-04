@@ -1,9 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const {getUser, insertLoginHistory, insertUser, formatDate, check, encryptionPw, findUser} = require('./query.js');
+const {insertUser, formatDate, check, encryptionPw, findUser} = require('./query.js');
 const requestIp = require('request-ip');
-const bcrypt = require('bcrypt');
+const cookieParser = require('cookie-parser');
+const { refreshJwtMiddleware } = require('./refreshToken.js');
+const userService = ('./userService.js');
+
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -12,6 +15,9 @@ const port = process.env.PORT || 5000;
 app.use(cors({ origin: 'http://localhost:3000'}));  //특정 접근 허용
 app.use(bodyParser.json());
 app.use(requestIp.mw()); //아이피 주소 미들웨어
+app.use(cookieParser()); //쿠키 파서 미들웨어
+app.use(refreshJwtMiddleware);// JWT 토큰을 자동으로 새로 고치는 미들웨어
+
 
 app.get('/', (req, res) => {
     res.send("hello, express!!!");
@@ -19,38 +25,13 @@ app.get('/', (req, res) => {
 });
 
 //로그인 
-app.post('/login', async (req, res) => {
+app.post('/login', async (req, res)  => {
     try {
-        const { id, pw } = req.body; // req.body에서 id, pw 추출
-        const ip_address = req.clientIp; // 클라이언트 ip 주소 추출
-        
-        // id 또는 pw가 없으면 오류 메시지 반환
-        if (!id || !pw) {
-            return res.status(400).json({ message: "아이디와 비밀번호를 모두 입력해주세요" });
-        }
-        
-        // 저장된 비밀번호 가져오기
-        const storedPw = await getUser(id);
-        
-        // 아이디가 존재하지 않으면 오류 메시지 반환
-        if (!storedPw) {
-            return res.status(401).json({ message: "아이디가 존재하지 않습니다" });
-        }
-        
-        // 입력된 비밀번호와 저장된 비밀번호를 비교
-        const isMatch = await bcrypt.compare(pw, storedPw);
-        
-        // 비밀번호가 일치하면 로그인 이력 기록 후 응답 반환
-        if (isMatch) {
-            await insertLoginHistory(id, ip_address); // 로그인 이력 기록
-            return res.status(200).json({ message: "로그인 성공" });
-        } else {
-            return res.status(401).json({ message: "비밀번호가 일치하지 않습니다" });
-        }
-    } catch (error) {
+	await userService.login(req, res);
+      } catch (error){
         console.error("로그인 실행중 오류 발생:", error); // 서버 로그에 에러 기록
         return res.status(500).json({ message: "서버 오류가 발생했습니다" });
-    }
+      }
 });
 
 //아이디 중복 확인
@@ -111,7 +92,7 @@ app.post('/signUp', async (req, res) => {
 });
 
 //아이디 찾기
-app.post('/login', async (req, res) => {
+app.post('', async (req, res) => {
     try{
         const {name, phone} = req.body;
         //사용자 아이디 찾기
@@ -128,6 +109,27 @@ app.post('/login', async (req, res) => {
         return res.status(500).json({ message: "서버 오류가 발생했습니다" });
     }
 });
+
+//비밀번호 찾기 - 사용자 정보 확인
+app.post('', async (req, res) => {
+    try{
+        const {id, name, phone} = req.body;
+        //사용자 아이디 찾기
+        const userPw = await findUser(id, name, phone);
+
+        if(userPw){
+            //조건에 맞는 아이디 있으면 값 반환
+            return res.status(200).json({userId, message : "조건에 맞는 아이디가 있습니다"});
+        }else{
+            return res.status(400).json({message : "조건에 맞는 아이디가 없습니다"})
+        }
+    }catch (error){
+        console.error("비밀번호 찾기 사용자 정보 확인 중 오류 발생:", error); // 서버 로그에 에러 기록
+        return res.status(500).json({ message: "서버 오류가 발생했습니다" });
+    }
+});
+
+
 
 app.listen(port, ()=> {
     console.log(`${port}에서 대기중~~~`);

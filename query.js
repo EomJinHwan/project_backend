@@ -99,9 +99,17 @@ async function encryptionPw(pw) {
 };
 
 //아이디 찾기
-async function findUser(name, phone){
-    const query = "SELECT user_id FROM member WHERE name=? AND phone=?";
-    const values = [name, phone];
+async function findUser(user_id = null, name, phone){
+    let query
+    let values
+
+    if(user_id){
+        query = "SELECT user_id FROM member WHERE user_id = ? AND name=? AND phone=?";
+        values = [user_id, name, phone];
+    }else{
+        query = "SELECT user_id FROM member WHERE name=? AND phone=?";
+        values = [name, phone];
+    }
     return new Promise((resolve, reject) => {
         pool.query(query, values, (error, results) => {
             if (error) {
@@ -113,6 +121,22 @@ async function findUser(name, phone){
             } else {
                 resolve(null); // 조건에 맞는 아이디 없음 
             }
+        });
+    });
+};
+
+//비밀번호 변경
+async function changePw(newPw) {
+    const query = "INSERT INTO login_history (user_id, ip_address, history) VALUES (?, ?, CURRENT_TIMESTAMP)";
+    const values = [id, ip_address];
+    return new Promise((resolve, reject) => {
+        pool.query(query, values, (error, results) => {
+            if (error) {
+                console.error("오류", error);
+                return reject(error);
+            }
+            console.log("데이터 삽입 성공", results);
+                return resolve(results);
         });
     });
 };
