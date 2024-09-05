@@ -5,7 +5,7 @@ const {insertUser, formatDate, check, encryptionPw, findUser} = require('./query
 const requestIp = require('request-ip');
 const cookieParser = require('cookie-parser');
 const { refreshJwtMiddleware } = require('./refreshToken.js');
-const userService = ('./userService.js');
+const userService = require('./userService.js');
 
 
 const app = express();
