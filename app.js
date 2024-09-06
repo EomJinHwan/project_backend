@@ -5,8 +5,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const requestIp = require('request-ip');
 const cookieParser = require('cookie-parser');
-const { refreshJwtMiddleware } = require('./refreshToken.js');
-const userRouter = require('./userRouter')
+const { refreshJwtMiddleware } = require('./services/refreshToken.js');
+const userRouter = require('./routers/userRouter.js');
 
 const app = express();
 const port = process.env.PORT || 5000;
