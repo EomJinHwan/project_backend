@@ -37,7 +37,7 @@ async function insertLoginHistory(id, ip_address) {
 
 //ID 비교
 async function getUser (id){
-    const query = "SELECT user_pw FROM member WHERE user_id = ?";
+    const query = "SELECT user_pw, name FROM member WHERE user_id = ?";
     return new Promise((resolve, reject) => {
         pool.query(query, [id], (error, results) => {
             if (error) {
@@ -45,7 +45,7 @@ async function getUser (id){
                 return reject(error);
             }
             if (results.length > 0) {
-                resolve(results[0].user_pw); // 중복된 아이디가 있음
+                resolve(results[0]); // 중복된 아이디가 있음
             } else {
                 resolve(null); // 중복된 아이디가 없음
             }
@@ -75,9 +75,9 @@ async function check (id){
                 return reject(error);
             }
             if (results.length > 0) {
-                resolve(true); // 중복된 아이디가 있음 - 프론트 에 주는 값
+                resolve(false); // 중복된 아이디가 있음 - 프론트 에 주는 값
             } else {
-                resolve(false); // 중복된 아이디가 없음
+                resolve(true); // 중복된 아이디가 없음
             }
         });
     });
@@ -98,6 +98,73 @@ async function encryptionPw(pw) {
     }
 };
 
+//아이디 찾기
+async function findUser(user_id = null, name, phone){
+    let query
+    let values
+
+    if(user_id){
+        query = "SELECT user_id FROM member WHERE user_id = ? AND name=? AND phone=?";
+        values = [user_id, name, phone];
+    }else{
+        query = "SELECT user_id FROM member WHERE name=? AND phone=?";
+        values = [name, phone];
+    }
+    return new Promise((resolve, reject) => {
+        pool.query(query, values, (error, results) => {
+            if (error) {
+                console.error("오류", error);
+                return reject(error);
+            }
+            if (results.length > 0) {
+                resolve(results[0].user_id); // 아이디 찾기 성공
+            } else {
+                resolve(null); // 조건에 맞는 아이디 없음 
+            }
+        });
+    });
+};
+
+//비밀번호 조회
+async function getCurrentPw(userId) {
+    const query = "SELECT user_pw FROM member WHERE user_id = ?"
+    const values = [userId];
+    return new Promise((resolve, reject) => {
+        pool.query(query, values, (error, results) => {
+            if (error) {
+                console.error("기존 비밀번호 조회 오류", error);
+                return reject(error);
+            }
+            if (results.length > 0) {
+                resolve(results[0].user_pw); // 비밀번호 찾기 성공
+            } else {
+                resolve(null); // 조건에 맞는 비밀번호 없음 
+            }
+        });
+    });
+};
+
+//비밀번호 변경
+async function updatePw(userId, newPw) {
+    try{
+        const query = "UPDATE member SET user_pw = ? WHERE user_id = ?";
+        const values = [newPw, userId];
+        return new Promise((resolve, reject) => {
+            pool.query(query, values, (error, results) => {
+                if (error) {
+                    console.error("비밀번호 업데이트 오류", error);
+                    return reject(error);
+                }
+                console.log("데이터 삽입 성공", results);
+                return resolve(results);
+            });
+        });
+    }catch (error) {
+        console.error("비밀번호 변경 오류:", error.message);
+        throw error;
+    }
+};
+
 module.exports = {
     insertUser,
     insertLoginHistory,
@@ -105,4 +172,7 @@ module.exports = {
     formatDate,
     check,
     encryptionPw,
+    findUser,
+    updatePw,
+    getCurrentPw,
 };
