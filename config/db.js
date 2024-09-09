@@ -1,4 +1,4 @@
-//db.js
+// ./config/db.js
 const mysql = require('mysql2');
 
 const pool = mysql.createPool({
@@ -13,5 +13,3 @@ const pool = mysql.createPool({
 });
 
 module.exports = pool;
-//pool 객체를 module.exports를 통해 다른 파일에서도 사용할수있게 함
-//java의 객체 생성취급인듯

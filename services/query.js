@@ -1,4 +1,4 @@
-//query.js
+// ./services/query.js
 const pool = require('../config/db');
 const bcrypt = require('bcrypt');
 
@@ -53,7 +53,7 @@ async function getUser (id){
     });
 };
 
-//DATE 타입 변환
+//DATE 타입 변환 - date-picker
 function formatDate(date){
     // 날짜가 제공되지 않은 경우 null을 반환
     if(!date) return null;  
@@ -62,6 +62,20 @@ function formatDate(date){
     const month = String(date.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1
     const day = String(date.getDate()).padStart(2, '0'); // 일
     // 'YYYY-MM-DD' 형식으로 날짜 문자열을 조합하여 반환
+    return `${year}-${month}-${day}`;
+}
+
+//DATE 타입 변환 - yyyymmdd
+function convertDateFormat(dateString) {
+    // yyyymmdd 형식이 아닌 경우 null 반환
+    if (!/^\d{8}$/.test(dateString)) return null;
+
+    // 연도, 월, 일 추출
+    const year = dateString.substring(0, 4);
+    const month = dateString.substring(4, 6);
+    const day = dateString.substring(6, 8);
+
+    // 'yyyy-mm-dd' 형식으로 문자열 조합하여 반환
     return `${year}-${month}-${day}`;
 }
 
@@ -99,16 +113,16 @@ async function encryptionPw(pw) {
 };
 
 //아이디 찾기
-async function findUser(user_id = null, name, phone){
+async function findUser(user_id = null, birth, phone){
     let query
     let values
 
     if(user_id){
-        query = "SELECT user_id FROM member WHERE user_id = ? AND name=? AND phone=?";
-        values = [user_id, name, phone];
+        query = "SELECT user_id FROM member WHERE user_id = ? AND birth=? AND phone=?";
+        values = [user_id, birth, phone];
     }else{
-        query = "SELECT user_id FROM member WHERE name=? AND phone=?";
-        values = [name, phone];
+        query = "SELECT user_id FROM member WHERE birth=? AND phone=?";
+        values = [birth, phone];
     }
     return new Promise((resolve, reject) => {
         pool.query(query, values, (error, results) => {
@@ -147,6 +161,7 @@ async function getCurrentPw(userId) {
 //비밀번호 변경
 async function updatePw(userId, newPw) {
     try{
+        console.log(`Updating password for userId: ${userId} with newPw: ${newPw}`);
         const query = "UPDATE member SET user_pw = ? WHERE user_id = ?";
         const values = [newPw, userId];
         return new Promise((resolve, reject) => {
@@ -156,6 +171,7 @@ async function updatePw(userId, newPw) {
                     return reject(error);
                 }
                 console.log("데이터 삽입 성공", results);
+                console.log(`Rows matched: ${results.affectedRows}`);
                 return resolve(results);
             });
         });
@@ -175,4 +191,5 @@ module.exports = {
     findUser,
     updatePw,
     getCurrentPw,
+    convertDateFormat,
 };
