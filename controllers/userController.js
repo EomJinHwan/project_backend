@@ -7,18 +7,18 @@ const secretKey = process.env.SECRET_KEY;
 
 //로그인
 async function LoginRequest(req, res) {
-    const { id, pw } = req.body;// req.body에서 id, pw 추출
+    const { userId, userPw } = req.body;// req.body에서 id, pw 추출
     const ip_address = req.clientIp;// 클라이언트 ip 주소 추출
-    console.log(`id : ${id}, pw : ${pw}, ip : ${ip_address}`);
+    console.log(`userId : ${userId}, userPw : ${userPw}, ip : ${ip_address}`);
 
     try {
         // id 또는 pw가 없으면 오류 메시지 반환
-        if (!id || !pw) {
+        if (!userId || !userPw) {
             return res.status(400).json({success:false, message: "아이디와 비밀번호를 모두 입력해주세요" });
         }
 
         // 저장된 비밀번호 가져오기
-        const user = await getUser(id);
+        const user = await getUser(userId);
         console.log(`user : ${JSON.stringify(user)}`);
 
         // 아이디가 존재하지 않으면 오류 메시지 반환
@@ -27,20 +27,25 @@ async function LoginRequest(req, res) {
         }
 
         // 입력된 비밀번호와 저장된 비밀번호를 비교
-        const isMatch = await bcrypt.compare(pw, user.user_pw);
+        const isMatch = await bcrypt.compare(userPw, user.user_pw);
         console.log(`isMatch : ${isMatch}`);
 
         // 비밀번호가 일치하면 로그인 이력 기록 후 응답 반환
         if (isMatch) {
-            await insertLoginHistory(id, ip_address); // 로그인 이력 기록
+            await insertLoginHistory(userId, ip_address); // 로그인 이력 기록
             //토큰 - 프론트에 생기면 추가 
             // const userload = {
             //     userId : id
             // };
             // console.log(`userload : ${userload}`);
+
             // const token = await generateToken(userload);
             // console.log(`token : ${token}`);
-            // res.cookie('token', token, {httpOnly: true, maxAge: 3600000});
+
+            // res.cookie('token', token, {httpOnly: true, maxAge: 3600000, token});
+            // console.log('res 객체:', res);
+            // console.log('res.cookie 메서드:', res.cookie);
+
             return res.status(200).json({success:true, message: "로그인 성공", name:user.name }); 
         } else {
             return res.status(401).json({success:false, message: "비밀번호가 일치하지 않습니다" });
@@ -77,16 +82,16 @@ async function CheckUserIdDuplicate(req, res) {
 //회원가입
 async function RegisterRequest(req, res) {
     // 클라이언트로부터 받은 데이터에서 값을 추출
-    const { user_id, user_pw, user_name, user_phone, user_birthDate } = req.body;
-    console.log(`user_id : ${user_id}, user_pw : ${user_pw}, user_name : ${user_name}, user_phone : ${user_phone}, user_birthDate : ${user_birthDate}`);
+    const { userId, userPw, userName, userPhone, userBirthDate } = req.body;
+    console.log(`user_id : ${userId}, user_pw : ${userPw}, user_name : ${userName}, user_phone : ${userPhone}, user_birthDate : ${userBirthDate}`);
     try{
         // 필수 값이 모두 제공되었는지 확인
-        if (!user_id || !user_pw || !user_name || !user_phone || !user_birthDate) {
+        if (!userId || !userPw || !userName || !userPhone || !userBirthDate) {
             return res.status(400).json({success:false, message: "빈칸을 다 채워주세요" });
         }
 
         // user_birthDate를 Date 객체로 변환
-        const birthDate = new Date(user_birthDate);
+        const birthDate = new Date(userBirthDate);
         console.log(`birthDate : ${birthDate}`);
 
         // 변환된 Date 객체가 유효한 날짜인지 확인
@@ -99,11 +104,11 @@ async function RegisterRequest(req, res) {
         console.log(`birth : ${birth}`);
 
         // 비밀번호 암호화
-        const encryption_pw = await encryptionPw(user_pw);
+        const encryption_pw = await encryptionPw(userPw);
         console.log(`encryption_pw : ${encryption_pw}`);
 
         // 사용자 정보를 데이터베이스에 삽입
-        await insertUser(user_id, encryption_pw, user_name, user_phone, birth);
+        await insertUser(userId, encryption_pw, userName, userPhone, birth);
         
         return res.status(201).json({success:true, message:"회원가입 성공"});
     } catch (error) {
@@ -114,22 +119,22 @@ async function RegisterRequest(req, res) {
 
 //아이디 찾기
 async function FindUserId(req, res) {
-    const {user_birthDate, phone} = req.body;
-    console.log(`user_birthDate : ${user_birthDate}, phone : ${phone}`);
+    const {userBirthDate, userPhone} = req.body;
+    console.log(`user_birthDate : ${userBirthDate}, phone : ${userPhone}`);
 
     try {
         //생년월일 yyyymmdd 로 변환
-        const birth = convertDateFormat(user_birthDate);
+        const birth = convertDateFormat(userBirthDate);
         console.log(`birth : ${birth}`);
 
         if(birth){
             //사용자 아이디 찾기
-            const userId = await findUser(null, birth, phone);
+            const userId = await findUser(null, birth, userPhone);
             console.log(`userId : ${userId}`);
 
             if(userId){
                 //조건에 맞는 아이디 있으면 값 반환
-                return res.status(200).json({success:true, message : "조건에 맞는 아이디가 있습니다", id:userId});
+                return res.status(200).json({success:true, message : "조건에 맞는 아이디가 있습니다", userId:userId});
              } else {
                 return res.status(400).json({success:false, message : "조건에 맞는 아이디가 없습니다"});
             }
@@ -144,15 +149,15 @@ async function FindUserId(req, res) {
 
 //비밀번호 찾기
 async function FindPassword(req, res) {
-    const {id, user_birthDate, phone} = req.body;
-    console.log(`id : ${id}, user_birthDate : ${user_birthDate}, phone : ${phone}`);
+    const {userId, userBirthDate, userPhone} = req.body;
+    console.log(`id : ${userId}, user_birthDate : ${userBirthDate}, phone : ${userPhone}`);
 
     try{
         //생년월일 yyyymmdd 로 변환
-        const birth = convertDateFormat(user_birthDate);
+        const birth = convertDateFormat(userBirthDate);
         console.log(`birth : ${birth}`);
 
-        const user = await findUser(id, birth, phone);
+        const user = await findUser(userId, birth, userPhone);
         console.log(`user : ${user}`);
 
         if(user){
