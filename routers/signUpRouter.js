@@ -8,7 +8,7 @@ const {sendSMS, verifyCode} = require('../controllers/smsController');
 router.post('/', RegisterRequest);
 
 //아이디 중복 확인 라우터
-router.get('/checkId/:id', CheckUserIdDuplicate);
+router.get('/checkId/:userId', CheckUserIdDuplicate);
 
 //SMS문자 인증 라우터
 router.post('/sendSMSCode', sendSMS);

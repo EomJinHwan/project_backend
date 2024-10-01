@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const requestIp = require('request-ip');
 const cookieParser = require('cookie-parser');
 const { refreshJwtMiddleware } = require('./services/refreshToken.js');
-const userRouter = require('./routers/userRouter.js');
+const Router = require('./routers/Router.js');
 //app.js
 //네이버 연동 로그인
 const client_id = "3WPCluuooCUJh9i7Rey1";
@@ -26,7 +26,7 @@ app.use(bodyParser.json());
 app.use(requestIp.mw()); //아이피 주소 미들웨어
 app.use(cookieParser()); //쿠키 파서 미들웨어
 app.use(refreshJwtMiddleware);// JWT 토큰을 자동으로 새로 고치는 미들웨어
-app.use('/', userRouter);
+app.use('/api', Router);
 
 //네이버 연동 로그인
 app.get('/naverlogin', (req, res) => {
