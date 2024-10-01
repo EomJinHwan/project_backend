@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 
 //회원가입
 async function insertUser(user_id, user_pw, user_name, user_phone, user_birth){
-    const query = "insert into member(user_id, user_pw, name, phone, birth, created_at) values(?,?,?,?,?,CURRENT_TIMESTAMP)";
+    const query = "INSERT INTO member(user_id, user_pw, name, phone, birth, created_at) VALUES(?,?,?,?,?,CURRENT_TIMESTAMP)";
     const values = [user_id, user_pw, user_name, user_phone, user_birth];
 
     return new Promise((resolve, reject) => {
