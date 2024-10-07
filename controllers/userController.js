@@ -1,9 +1,6 @@
 // ./controllers/userController.js
-const {insertUser, insertLoginHistory, getUser, formatDate, check, encryptionPw, findUser, getCurrentPw, convertDateFormat, updatePw, myPage } = require('../services/query.js');
+const {insertUser, insertLoginHistory, getUser, check, encryptionPw, findUser, getCurrentPw, updatePw } = require('../services/query.js');
 const bcrypt = require('bcrypt');
-const { generateToken } = require('../services/jwt.js');
-const jwt = require('jsonwebtoken');
-const secretKey = process.env.SECRET_KEY;
 const pool = require('../config/db.js');
 
 //로그인
@@ -70,21 +67,15 @@ async function RegisterRequest(req, res) {
         if (!userId || !userPw || !userName || !userPhone || !userBirthDate) {
             return res.status(400).json({success:false, message: "빈칸을 다 채워주세요" });
         }
-        // user_birthDate를 Date 객체로 변환
-        const birthDate = new Date(userBirthDate);
+        // userBirthDate를 Date 객체로 변환한 후, ISO 형식의 날짜 문자열(YYYY-MM-DD)로 변환
+        const birthDate = new Date(userBirthDate).toISOString().split('T')[0];
         console.log(`birthDate : ${birthDate}`);
-        // 변환된 Date 객체가 유효한 날짜인지 확인
-        if (isNaN(birthDate.getTime())) {
-            return res.status(400).json({success:false, message: "잘못된 날짜 형식입니다." });
-        }
-        // Date 객체를 'YYYY-MM-DD' 형식의 문자열로 변환
-        const birth = formatDate(birthDate);
-        console.log(`birth : ${birth}`);
+
         // 비밀번호 암호화
         const encryption_pw = await encryptionPw(userPw);
         console.log(`encryption_pw : ${encryption_pw}`);
         // 사용자 정보를 데이터베이스에 삽입
-        await insertUser(userId, encryption_pw, userName, userPhone, birth);       
+        await insertUser(userId, encryption_pw, userName, userPhone, birthDate);       
         return res.status(201).json({success:true, message:"회원가입 성공"});
     } catch (error) {
         console.error("회원가입 실행중 오류 발생:", error); // 서버 로그에 에러 기록
@@ -97,12 +88,12 @@ async function FindUserId(req, res) {
     const {userBirthDate, userPhone} = req.body;
     console.log(`user_birthDate : ${userBirthDate}, phone : ${userPhone}`);
     try {
-        //생년월일 yyyymmdd 로 변환
-        const birth = convertDateFormat(userBirthDate);
-        console.log(`birth : ${birth}`);
-        if(birth){
+        // userBirthDate를 Date 객체로 변환한 후, ISO 형식의 날짜 문자열(YYYY-MM-DD)로 변환
+        const birthDate = new Date(userBirthDate).toISOString().split('T')[0];
+        console.log(`birthDate : ${birthDate}`);
+        if(birthDate){
             //사용자 아이디 찾기
-            const userId = await findUser(null, birth, userPhone);
+            const userId = await findUser(null, birthDate, userPhone);
             console.log(`userId : ${userId}`);
             if(userId){
                 //조건에 맞는 아이디 있으면 값 반환

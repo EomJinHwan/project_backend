@@ -1,6 +1,6 @@
 //smsController.js
 const coolsms = require('coolsms-node-sdk').default;
-const messageService = new coolsms('본인api', '본인secret키');
+const messageService = new coolsms('NCSZGBHK4FK25MJF', 'C1TMPDPQEWA1HTQTVBVA92KJZQZTUG9G');
 
 const verificationCodes = {}; //인증 번호를 저장할 객체
 
@@ -16,7 +16,7 @@ async function sendSMS(req, res) {
     try{
         const response = await messageService.sendOne({
             to: userPhone,
-            from: "계정에서 등록한 발신번호",
+            from: "01075344448",
             text: `[다솜 스터디 카페] 인증번호\n${verificationCode}입니다`,
         });
         console.log("문자 메시지 전송 성공 : ", response);

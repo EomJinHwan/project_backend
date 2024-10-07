@@ -5,6 +5,7 @@ const router = express.Router();
 const loginRouter = require('./loginRouter');
 const signUpRouter = require('./signUpRouter');
 const userRouter = require('./userRouter');
+const naverRouter = require('./naverRouter');
 
 //로그인 라우터
 router.use('/login', loginRouter);
@@ -15,7 +16,7 @@ router.use('/signUp', signUpRouter);
 //유저 관련 라우터
 router.use('/userRouter', userRouter);
 
-//회원탈퇴
-// router.post('', RemoveUser);
+//네이버 관련 라우터
+router.use('', naverRouter);
 
 module.exports = router;
