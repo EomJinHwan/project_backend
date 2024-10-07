@@ -17,6 +17,6 @@ router.use('/signUp', signUpRouter);
 router.use('/userRouter', userRouter);
 
 //네이버 관련 라우터
-router.use('', naverRouter);
+router.use('', naverRouter); //비워둬야 작
 
 module.exports = router;
