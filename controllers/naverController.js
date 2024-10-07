@@ -3,9 +3,9 @@ const fetch = require('node-fetch');
 const pool = require('../config/db.js');
 const {encryptionPw} = require('../services/query.js');
 
-const client_id = "3WPCluuooCUJh9i7Rey1";
-const client_secret = "AmliPbLGwe";
-const state = "test";
+const client_id = "본인 id";
+const client_secret = "본인 secret";
+const state = "test"; //임시 지정
 const redirectURI = encodeURI("http://localhost:5000/api/callback");
 const api_url = "";
 
@@ -19,7 +19,6 @@ async function naverlogin(req, res) {
 async function callback(req, res) {
     const { code, state } = req.query; // 쿼리 파라미터에서 code와 state 추출
     const ip_address = req.clientIp;
-    console.log(`code : ${code}, state : ${state}`);
 
     // 네이버 API에 액세스 토큰 요청 URL
     const api_url = `https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id=${client_id}&client_secret=${client_secret}&redirect_uri=${redirectURI}&code=${code}&state=${state}`;
@@ -59,11 +58,10 @@ async function callback(req, res) {
             const userData = await data.json(); // 사용자 정보 JSON 파싱
             console.log("userData : ", userData);
 
-            // 사용자 존재 여부 체크
+            // 사용자 데이터 추출
             const { id, name, mobile, birthday, birthyear } = userData.response;
-            const birthDate = `${birthyear}-${birthday}`;
-            const userPhone = mobile.replace(/-/g, '');
-            console.log("userPhone : ", userPhone);
+            const birthDate = `${birthyear}-${birthday}`;//생년월일 변환
+            const userPhone = mobile.replace(/-/g, ''); //핸드폰 번호 변환
 
             const queryCheck = 'SELECT * FROM snsmember WHERE user_id = ?';
             pool.query(queryCheck, [id], async(error, results) => {
@@ -71,10 +69,12 @@ async function callback(req, res) {
                     console.error('DB Query Error:', error);
                     return res.status(500).json({ success: false, message: "서버 오류 발생" });
                 }
+                // 사용자가 존재하지 않는 경우에만 삽입
                 if (results.length === 0) {
-                    // 사용자가 존재하지 않는 경우에만 삽입
                     const pw = userPhone;   // 임시비밀번호를 폰번호로 사용
                     const encryption_pw = await encryptionPw(pw);
+
+                    // 데이터 삽입
                     const queryInsert = 'INSERT INTO snsmember (user_id, user_pw, name, phone, birth, created_at) VALUES (?, ?, ?, ?, ?, NOW())';
                     const values = [id, encryption_pw, name, userPhone, birthDate];
 
@@ -87,6 +87,7 @@ async function callback(req, res) {
                     });
                 }
 
+                // 로그인 기록
                 const historyquery = "INSERT INTO login_history (user_id, ip_address, history) VALUES (?, ?, CURRENT_TIMESTAMP)";
                 const values = [id, ip_address];
                 pool.query(historyquery, values, (error) => {
@@ -95,8 +96,9 @@ async function callback(req, res) {
                         return res.status(500).json({ success: false, message: "로그 기록 중 오류 발생" });
                     }
                     console.log("로그 기입 됨")
-                })
-
+                });
+                
+                // 로그인 후 정보를 부모창으로 전달하고 새창을 닫음
                 return res.send(`
                     <script>
                         // userData를 여기서 정의합니다. 예시입니다.
