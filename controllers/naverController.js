@@ -1,10 +1,10 @@
 //naverController.js
 const fetch = require('node-fetch');
-const pool = require('../config/db.js');
+const pool = require('../config/db.js'); //connetion
 
-const client_id = "3WPCluuooCUJh9i7Rey1";
-const client_secret = "AmliPbLGwe";
-const state = "test";
+const client_id = "본인 ID";
+const client_secret = "본인 SECRET KEY";
+const state = "test"; //임의로 지정
 const redirectURI = encodeURI("http://localhost:5000/api/callback");
 const api_url = "";
 
@@ -113,33 +113,8 @@ async function callback(req, res) {
     }
 };
 
-//네이버 연동 해제 - 보류
-async function naverdelete(req, res) {
-
-    const { ACCESS_TOKEN, userId } = req.body;
-    const api_url = `https://nid.naver.com/oauth2.0/token?grant_type=delete&client_id=${client_id}&client_secret=${client_secret}&access_token=${ACCESS_TOKEN}&service_provider=NAVER`;
-    try {
-        const response = await fetch(api_url, {
-        });
-        const deletetoken = await response.json();
-        console.log(deletetoken);
-
-        if (deletetoken.result === "success") {
-            console.log("네이버 연동 해제 완료");
-
-            //snsmember테이블에서 삭제 쿼리 넣어야함
-
-            return res.state(200).json({ success: true, message: "네이버 연동 해제 완료" });
-        }
-    } catch (error) {
-        console.log("네이버 연동해제 중 오류");
-        return res.state(500).json({ success: false, message: "네이버 연동해제 중 서버 오류" });
-    }
-
-};
 
 module.exports = {
     naverlogin,
     callback,
-    naverdelete,
 }
