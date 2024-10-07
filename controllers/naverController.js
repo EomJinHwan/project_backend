@@ -9,9 +9,8 @@ const state = "test"; //임시 지정
 const redirectURI = encodeURI("http://localhost:5000/api/callback");
 const api_url = "";
 
-//네이버 연동 로그인
+/네이버 연동 로그인
 async function naverlogin(req, res) {
-    console.log("hi");
     const api_url = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${client_id}&redirect_uri=${redirectURI}&state=${state}`;
     res.status(200).json({ success: true, api_url: api_url });
 };
